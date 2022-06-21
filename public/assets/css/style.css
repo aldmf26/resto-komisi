@@ -1,0 +1,45 @@
+body {
+    font-family: "Roboto", sans-serif;
+    color: #787878;
+  }
+  .btn-new {
+    background-color: #53719e;
+    color: #fff;
+  }
+  .btn-new:hover {
+    background-color: #598ea0;
+    color: #fff;
+  }
+  
+  th,
+  td {
+    color: #787878;
+  }
+  
+  th {
+    white-space: nowrap;
+  }
+  
+  .lock:hover .fa-door-closed {
+    display: none;
+  }
+  .lock:hover .fa-door-open {
+    display: inline-block;
+  }
+  .fa-door-open {
+    display: none;
+  }
+  
+  .main-sidebar {
+    background: #115099;
+    background: -webkit-linear-gradient(to right, #115099, #115099);
+    background: linear-gradient(to right, #4d529c, #115099);
+  }
+  
+  .bg-costume {
+    background: #115099;
+    background: -webkit-linear-gradient(to right, #115099, #115099);
+    background: linear-gradient(to right, #4d529c, #115099);
+    color: white;
+  }
+  
