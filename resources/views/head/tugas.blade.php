@@ -1,3 +1,18 @@
+@php
+    function timeDiff($firstTime,$lastTime)
+{
+
+// convert to unix timestamps
+$firstTime=strtotime($firstTime);
+$lastTime=strtotime($lastTime);
+
+// perform subtraction to get the difference (in seconds) between times
+$timeDiff=$lastTime-$firstTime;
+
+// return the difference
+return $timeDiff;
+}
+@endphp
 <style>
     .table tr:not(.header) {
         display: none;
@@ -38,7 +53,7 @@
                                                                 LEFT JOIN tb_meja AS c ON c.id_meja = a.id_meja where a.id_lokasi = '$lokasi' and a.id_meja = '$m->id_meja' and a.selesai = 'dimasak' and aktif = '1' and void = 0"
         ); ?>
         <?php $menu2 = DB::select(
-            "SELECT b.nm_menu, c.nm_meja, a.* FROM tb_order AS a 
+            "SELECT b.nm_menu, c.nm_meja, a.*, TIMEDIFF('a.j_selesai', 'a.j_mulai') as menit FROM tb_order AS a 
                                                                 LEFT JOIN view_menu AS b ON b.id_harga = a.id_harga
                                                                 LEFT JOIN tb_meja AS c ON c.id_meja = a.id_meja where a.id_lokasi = '$lokasi' and a.id_meja = '$m->id_meja' and a.selesai != 'dimasak' and aktif = '1' and void = 0"
         ); ?>
@@ -59,9 +74,14 @@
             <?php endif; ?>
             <?php endforeach ?>
             <?php if (date('H:i', strtotime($m->j_selesai)) < date('H:i', strtotime($m->j_mulai . '+40 minutes'))) : ?>
-            <td><b style="color:blue;"><?= date('H:i', strtotime($m->j_selesai)) ?></b></td>
+            @php
+                $mulai = Str::remove(':', date('H:i', strtotime($m->j_mulai)));
+                $akhir = Str::remove(':', date('H:i', strtotime($m->j_selesai)));
+                $menit = (int) $akhir - $mulai;
+            @endphp
+            <td><b style="color:blue;"><?= date('H:i', strtotime($m->j_selesai)) ?> / {{ $menit }} Menit</b></td>
             <?php else : ?>
-            <td><b style="color:red;"><?= date('H:i', strtotime($m->j_selesai)) ?></b></td>
+            <td><b style="color:red;"><?= date('H:i', strtotime($m->j_selesai)) ?> </b></td>
             <?php endif ?>
         </tr>
         <?php endforeach ?>
