@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use PhpOffice\PhpSpreadsheet\Reader\Xls;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -61,6 +62,9 @@ class Kom_server extends Controller
 
                         
         ");
+
+
+            
             $data = [
                 'title' => 'Kom Server',
                 'server' => $server,
@@ -127,9 +131,23 @@ class Kom_server extends Controller
 
                         
         ");
+        $lokasiApi = $id_lokasi == 1 ? 'takemori' : 'soondobu';
+        $komisi = Http::get("http://127.0.0.1:8000/api/komisi/$lokasiApi/$tgl1/$tgl2");
+        
+        $kom = $komisi['komisi'];
+        $dt_rules = $komisi['dt_rules'];
+        $rules_active = $komisi['rules_active'];
+        $total_penjualan = $komisi['total_penjualan'];
+        $komisi_resto = $komisi['komisi_resto'];
+
             $data = [
                 'title' => 'Kom Server',
                 'server' => $server,
+                'komisi' => $kom,
+                'dt_rules' => $dt_rules,
+                'rules_active' => $rules_active,
+                'total_penjualan' => $total_penjualan,
+                'komisi_resto' => $komisi_resto,
                 'tgl1' => $tgl1,
                 'tgl2' => $tgl2,
                 'service' => $total_not_gojek,

@@ -142,6 +142,15 @@
             "autoWidth": true
         });
 
+        $('#tabelMajoo').DataTable({
+
+        "bSort": true,
+        "scrollY": true,
+        "paging": true,
+        "stateSave": true,
+        "scrollCollapse": true
+        });
+
     });
 </script>
 
