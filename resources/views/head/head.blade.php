@@ -186,7 +186,6 @@
             $(document).on('click', '.koki1', function(event) {
                 var kode = $(this).attr('kode');
                 var kry = $(this).attr('kry');
-
                 $.ajax({
                     type: "POST",
                     url: "<?= route('koki1') ?>",

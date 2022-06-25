@@ -1,16 +1,15 @@
 @php
-    function timeDiff($firstTime,$lastTime)
+function timeDiff($firstTime, $lastTime)
 {
+    // convert to unix timestamps
+    $firstTime = strtotime($firstTime);
+    $lastTime = strtotime($lastTime);
 
-// convert to unix timestamps
-$firstTime=strtotime($firstTime);
-$lastTime=strtotime($lastTime);
+    // perform subtraction to get the difference (in seconds) between times
+    $timeDiff = $lastTime - $firstTime;
 
-// perform subtraction to get the difference (in seconds) between times
-$timeDiff=$lastTime-$firstTime;
-
-// return the difference
-return $timeDiff;
+    // return the difference
+    return $timeDiff;
 }
 @endphp
 <style>
@@ -31,7 +30,7 @@ return $timeDiff;
             <?php foreach ($tb_koki as $k) : ?>
             <th class="sticky-top th-atas"><?= $k->nama ?></th>
             <?php endforeach ?>
-            <th class="sticky-top th-atas">Time In</th>
+            <th class="sticky-top th-atas">Time In / Durasi</th>
         </tr>
     </thead>
     <tbody style="font-size: 18px;" id="tugas_head">
@@ -49,23 +48,27 @@ return $timeDiff;
             <td colspan="50" class="bg-info"></td>
         </tr>
         <?php $menu = DB::select(
-            "SELECT b.nm_menu, c.nm_meja, a.* FROM tb_order AS a LEFT JOIN view_menu AS b ON b.id_harga = a.id_harga
-                                                                LEFT JOIN tb_meja AS c ON c.id_meja = a.id_meja where a.id_lokasi = '$lokasi' and a.id_meja = '$m->id_meja' and a.selesai = 'dimasak' and aktif = '1' and void = 0"
+            "SELECT b.nm_menu, c.nm_meja, a.*,e.ttlMenu FROM tb_order AS a LEFT JOIN view_menu AS b ON b.id_harga = a.id_harga
+            LEFT JOIN (SELECT d.id_harga, COUNT(id_harga) as ttlMenu FROM `tb_order` as d WHERE d.selesai = 'dimasak' GROUP BY d.id_harga) as e on b.id_harga = e.id_harga
+            LEFT JOIN tb_meja AS c ON c.id_meja = a.id_meja where a.id_lokasi = '$lokasi' and a.id_meja = '$m->id_meja' and a.selesai = 'dimasak' and aktif = '1' and void = 0 ORDER BY a.id_order",
         ); ?>
         <?php $menu2 = DB::select(
-            "SELECT b.nm_menu, c.nm_meja, a.*, TIMEDIFF('a.j_selesai', 'a.j_mulai') as menit FROM tb_order AS a 
-                                                                LEFT JOIN view_menu AS b ON b.id_harga = a.id_harga
-                                                                LEFT JOIN tb_meja AS c ON c.id_meja = a.id_meja where a.id_lokasi = '$lokasi' and a.id_meja = '$m->id_meja' and a.selesai != 'dimasak' and aktif = '1' and void = 0"
-        ); ?>
+            "SELECT b.nm_menu, c.nm_meja, a.*,e.ttlMenu, TIMEDIFF('a.j_selesai', 'a.j_mulai') as menit FROM tb_order AS a 
+                                                                        LEFT JOIN view_menu AS b ON b.id_harga = a.id_harga
+                                                                        LEFT JOIN (SELECT d.id_harga, COUNT(id_harga) as ttlMenu FROM `tb_order` as d WHERE d.selesai != 'dimasak' GROUP BY d.id_harga) as e on b.id_harga = e.id_harga
+                                                                        LEFT JOIN tb_meja AS c ON c.id_meja = a.id_meja where a.id_lokasi = '$lokasi' and a.id_meja = '$m->id_meja' and a.selesai != 'dimasak' and aktif = '1' and void = 0 ORDER BY a.id_order",
+        );
+        $no = 1;
+         ?>
 
         <?php foreach ($menu2 as $m) : ?>
         <tr>
             <td></td>
-            <td style="text-transform: lowercase;"><?= $m->nm_menu ?></td>
+            <td style="text-transform: lowercase;"><?= $m->nm_menu ?> <span class="text-danger">({{$m->ttlMenu}})</span></td>
             <td><?= $m->request ?></td>
             <td><?= $m->qty ?></td>
             <td><a kode="<?= $m->id_order ?>" class="btn btn-warning text-light btn-sm cancel"><i
-                        class="fas fa-undo"></i></a></td>
+                        class="fas fa-times"></i></a></td>
             <?php foreach ($tb_koki as $k) : ?>
             <?php if($k->id_karyawan == $m->id_koki1 || $k->id_karyawan == $m->id_koki2 || $k->id_karyawan == $m->id_koki3): ?>
             <td><i class="text-success fas fa-check-circle"></i></td>
@@ -73,22 +76,23 @@ return $timeDiff;
             <td></td>
             <?php endif; ?>
             <?php endforeach ?>
-            <?php if (date('H:i', strtotime($m->j_selesai)) < date('H:i', strtotime($m->j_mulai . '+40 minutes'))) : ?>
             @php
                 $mulai = Str::remove(':', date('H:i', strtotime($m->j_mulai)));
                 $akhir = Str::remove(':', date('H:i', strtotime($m->j_selesai)));
                 $menit = (int) $akhir - $mulai;
             @endphp
+            <?php if (date('H:i', strtotime($m->j_selesai)) < date('H:i', strtotime($m->j_mulai . '+40 minutes'))) : ?>
+
             <td><b style="color:blue;"><?= date('H:i', strtotime($m->j_selesai)) ?> / {{ $menit }} Menit</b></td>
             <?php else : ?>
-            <td><b style="color:red;"><?= date('H:i', strtotime($m->j_selesai)) ?> </b></td>
+            <td><b style="color:red;"><?= date('H:i', strtotime($m->j_selesai)) ?> / {{ $menit }} Menit</b></td>
             <?php endif ?>
         </tr>
         <?php endforeach ?>
         <?php foreach ($menu as $m) : ?>
         <tr class="header">
             <td></td>
-            <td style="white-space:nowrap;text-transform: lowercase;"><?= $m->nm_menu ?></td>
+            <td style="white-space:nowrap;text-transform: lowercase;"><?= $m->nm_menu ?> <span class="text-danger">({{$m->ttlMenu}})</span></td>
             <td><?= $m->request ?></td>
             <td><?= $m->qty ?></td>
             <?php if ($m->selesai == 'dimasak') : ?>
@@ -131,7 +135,7 @@ return $timeDiff;
             <?php endforeach ?>
             <td style="font-weight: bold;"><?= date('H:i', strtotime($m->j_mulai)) ?></td>
             <?php else : ?>
-            <td style="text-decoration: line-through; "><a href="<?= base_url("orderan/order/$m->no_order") ?>"
+            <td style="text-decoration: line-through; "><a href="<?= $m->no_order ?>"
                     style="color:black;">SELESAI</a></td>
             <?php foreach ($tb_koki as $k) : ?>
             <td></td>
@@ -144,6 +148,7 @@ return $timeDiff;
             <?php endif ?>
         </tr>
         <?php endforeach ?>
+        
         <?php endforeach ?>
     </tbody>
 </table>

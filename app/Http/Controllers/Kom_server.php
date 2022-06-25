@@ -355,6 +355,14 @@ class Kom_server extends Controller
             $tgl1 = $r->tgl1;
             $tgl2 = $r->tgl2;
         }
+        $lokasiApi = $id_lokasi == 1 ? 'takemori' : 'soondobu';
+        $komisi = Http::get("http://127.0.0.1:8000/api/komisi/$lokasiApi/$tgl1/$tgl2");
+        
+        $komisiMajoo = $komisi['komisi'];
+        $dt_rules = $komisi['dt_rules'];
+        $rules_active = $komisi['rules_active'];
+        $total_penjualan = $komisi['total_penjualan'];
+        $komisi_resto = $komisi['komisi_resto'];
 
         $service = DB::selectOne("SELECT SUM(if(tb_transaksi.total_orderan - discount - voucher < 0 ,0,tb_transaksi.total_orderan - discount - voucher)) as total FROM `tb_transaksi`
         LEFT JOIN(SELECT tb_order2.no_order2 as no_order, tb_order2.id_distribusi as id_distribusi FROM tb_order2 GROUP BY tb_order2.no_order2) dt_order ON tb_transaksi.no_order = dt_order.no_order
@@ -514,6 +522,99 @@ class Kom_server extends Controller
         $batas = $server;
         $batas = count($batas) + 1;
         $sheet2->getStyle('A1:F' . $batas)->applyFromArray($style);
+
+        // komisi majoo
+        $spreadsheet->createSheet();
+        $spreadsheet->setActiveSheetIndex(2);
+
+        $sheet3 = $spreadsheet->getActiveSheet();
+        $sheet3->setTitle('Komisi Majoo');
+
+        // lebar kolom
+        $sheet3->getColumnDimension('A')->setWidth(3);
+        $sheet3->getColumnDimension('B')->setWidth(20);
+        $sheet3->getColumnDimension('C')->setWidth(15);
+        $sheet3->getColumnDimension('D')->setWidth(14.36);
+        $sheet3->getColumnDimension('E')->setWidth(13);
+        $sheet3->getColumnDimension('F')->setWidth(16.9);
+        $sheet3->getColumnDimension('G')->setWidth(16);
+        $sheet3->getColumnDimension('J')->setWidth(13);
+        $sheet3->getColumnDimension('K')->setWidth(14);
+        $sheet3->getColumnDimension('L')->setWidth(14);
+        // header text
+        $sheet3
+            ->setCellValue('A1', 'NO')
+            ->setCellValue('B1', 'Nama')
+            ->setCellValue('C1', 'Komisi')
+            ->setCellValue('D1', 'Komisi Target');
+
+        $kolom = 2;
+        $i = 1;
+        $ttl_komisiMajoo = 0;
+        $ttl_komisiMajoo_trg = 0;
+        foreach ($komisiMajoo as $k) {
+
+            $spreadsheet->setActiveSheetIndex(2);
+            
+            if ($k['nm_karyawan'] == 'SDB' || $k['nm_karyawan'] == 'TKMR') {
+                continue;
+            }
+            if ($rules_active) {
+                if ($rules_active['jenis'] == 'komisi') {
+                    if ($k['dt_komisi'] >= $rules_active['jumlah']) {
+                        $trg_komisi = $k['dt_komisi'] * $rules_active['persen'];
+                    } else {
+                        $trg_komisi = $k['dt_komisi'];
+                    }
+                } else if ($rules_active['jenis'] == 'pendapatan') {
+                    if ($total_penjualan['ttl_penjualan'] >= $rules_active['jumlah']) {
+                        $trg_komisi = $k['dt_komisi'] * $rules_active['persen'];
+                    } else {
+                        $trg_komisi = $k['dt_komisi'];
+                    }
+                } else {
+                    $trg_komisi = $k['dt_komisi'];
+                }
+            } else {
+                $trg_komisi = $k['dt_komisi'];
+            }
+            $ttl_komisiMajoo_trg += $trg_komisi;
+            $ttl_komisiMajoo += $k['dt_komisi'];
+            $sheet3->setCellValue('A' . $kolom, $i++);
+            $sheet3->setCellValue('B' . $kolom, $k['nm_karyawan']);
+            $sheet3->setCellValue('C' . $kolom, $k['dt_komisi']);
+            $sheet3->setCellValue('D' . $kolom, $trg_komisi);
+            $kolom++;
+        }
+        $sheet3->setCellValue('B' . $kolom, 'TOTAL');
+        $sheet3->setCellValue('C' . $kolom, $ttl_komisiMajoo);
+        $sheet3->setCellValue('D' . $kolom, $ttl_komisiMajoo_trg);
+
+        $kolomT = $kolom + 1;
+        $sheet3->setCellValue('B' . $kolomT, 'BEBAN RESTO');
+        $sheet3->setCellValue('C' . $kolomT, $komisi_resto['beban_komisi']);
+        if($ttl_komisiMajoo == 0) {
+            $persen_resto = 0;
+        } else {
+            $persen_resto = $komisi_resto['beban_komisi'] ? ($komisi_resto['beban_komisi'] * 100) / $ttl_komisiMajoo : 0;
+        }
+        $beban_target_resto = $ttl_komisiMajoo_trg ? ($ttl_komisiMajoo_trg * $persen_resto) / 100 : 0;
+        $sheet3->setCellValue('D' . $kolomT, $beban_target_resto);
+        $writer = new Xlsx($spreadsheet);
+        $style = [
+            'borders' => [
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                ],
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+                ],
+            ],
+        ];
+        $batas = $komisiMajoo;
+        $batas = count($batas) + 3;
+        $sheet3->getStyle('A1:D' . $batas)->applyFromArray($style);
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="Kom-server.xlsx"');

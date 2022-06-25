@@ -39,11 +39,11 @@ foreach ($server as $k) : ?>
 
                         <li class="nav-item">
                             <a class="nav-link <?= $id_lokasi == 1 ? 'active btn-info' : '' ?>"
-                                href="<?= route('kom_serve') ?>?id_lokasi=1">Takemori</a>
+                                href="<?= route('kom_serve') ?>?id_lokasi=1&tgl1={{$tgl1}}&tgl2={{$tgl2}}">Takemori</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link <?= $id_lokasi == 2 ? 'active btn-info' : '' ?>"
-                                href="<?= route('kom_serve') ?>?id_lokasi=2">Soondobu</a>
+                                href="<?= route('kom_serve') ?>?id_lokasi=2&tgl1={{$tgl1}}&tgl2={{$tgl2}}">Soondobu</a>
                         </li>
 
                     </ul>
@@ -241,7 +241,7 @@ foreach ($server as $k) : ?>
                                                 if ($rules_active) {
                                                     if ($rules_active['jenis'] == 'komisi') {
                                                         if ($k['dt_komisi'] >= $rules_active['jumlah']) {
-                                                            $trg_komisi = $k['dt_komisi'] * $rules_active->persen;
+                                                            $trg_komisi = $k['dt_komisi'] * $rules_active['persen'];
                                                         } else {
                                                             $trg_komisi = $k['dt_komisi'];
                                                         }

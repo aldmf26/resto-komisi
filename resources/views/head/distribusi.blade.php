@@ -48,7 +48,7 @@
 
     <?php else : ?>
     <?php if(empty($distribusi_food->qty)): ?>
-    <li class="nav-item">
+    {{-- <li class="nav-item">
         <a href="<?= route('head', ['id' => '4']) ?>" class="nav-link badge-notif"><strong>Food
             </strong></a>
     </li>
@@ -57,7 +57,7 @@
         <a href="<?= route('head', ['id' => '4']) ?>" class="nav-link badge-notif "
             data-badge="{{$distribusi_food->qty}}"><strong>Food
             </strong></a>
-    </li>
+    </li> --}}
     <?php endif ?>
 
 
@@ -65,7 +65,7 @@
 
     <?php if ($id == '5') : ?>
     <?php if(empty($distribusi_drink->qty)): ?>
-    <li class="nav-item">
+    {{-- <li class="nav-item">
         <a href="<?= route('head', ['id' => '5']) ?>" class="nav-link badge-notif active"><strong>Drink
             </strong></a>
     </li>
@@ -74,21 +74,21 @@
         <a href="<?= route('head', ['id' => '5']) ?>" class="nav-link badge-notif active"
             data-badge="{{$distribusi_drink->qty}}"><strong>Drink
             </strong></a>
-    </li>
+    </li> --}}
     <?php endif ?>
 
     <?php else : ?>
     <?php if(empty($distribusi_drink->qty)): ?>
-    <li class="nav-item">
+    {{-- <li class="nav-item">
         <a href="<?= route('head', ['id' => '5']) ?>" class="nav-link badge-notif "><strong>Drink
             </strong></a>
-    </li>
+    </li> --}}
     <?php else: ?>
-    <li class="nav-item">
+    {{-- <li class="nav-item">
         <a href="<?= route('head', ['id' => '5']) ?>" class="nav-link badge-notif "
             data-badge="{{$distribusi_drink->qty}}"><strong>Drink
             </strong></a>
-    </li>
+    </li> --}}
     <?php endif ?>
     <?php endif ?>
 
